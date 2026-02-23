@@ -2,6 +2,7 @@ import requests
 import urllib3
 from config_reader import obtener_firewalls
 from typing import Optional
+import logging
 
 #Deshabilitar warnings de SSL
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -31,13 +32,13 @@ def obtener_usuarios(host, api_key, gateway=None) -> Optional[str]:
     #Manejo de errores
     except requests.exceptions.HTTPError as e:
         #Errores especificos de HTTP
-        print(f"HTTP error en {host}: {e}")
+        logging.error(f"HTTP error en {host}: {e}")
         return None
     except requests.exceptions.RequestException as e:
-        print(f"Error de conexion en {host}: {e}")
+        logging.error(f"Error de conexion en {host}: {e}")
         return None
     except Exception as e:
-        print(f"Error inesperado en {host}: {e}")
+        logging.error(f"Error inesperado en {host}: {e}")
         return None
 
 #if __name__ == "__main__":

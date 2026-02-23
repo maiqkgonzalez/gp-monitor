@@ -1,4 +1,5 @@
 import sqlite3
+import logging
 
 def crear_tabla():
     with sqlite3.connect("usuarios_gp.db") as connection:
@@ -33,7 +34,7 @@ def insertar_registro(firewall, gateway, num_usuarios, timestamp, status):
             connection.commit()
         return True
     except sqlite3.Error as e:
-        print(f"Error {e}")
+        logging.error(f"Error {e}")
         return False
 
 def insertar_registros_batch(lista_registros):
