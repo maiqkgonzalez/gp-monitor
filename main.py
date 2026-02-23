@@ -4,11 +4,12 @@ from data_processor import procesar_firewall
 from database import insertar_registros_batch
 from datetime import datetime
 from pathlib import Path
+import logging
 
 def ejecutar_ciclo(ciclos):
     #Bloque para el tiempo y ciclos
-    tiempo_actual = datetime.now().strftime('%H:%M:%S')
-    print(f"[{tiempo_actual}] Ciclo {ciclos}")
+    #tiempo_actual = datetime.now().strftime('%H:%M:%S')
+    logging.info(f"Ciclo {ciclos}")
 
     #Obtener la lista con los diccionarios de firewalls
     firewalls = obtener_firewalls()
@@ -26,25 +27,34 @@ def ejecutar_ciclo(ciclos):
                 #Imprimir resumen
                 for registro in registros:
                     if registro['status'] == "connected":
-                        print(f"  ✅ {registro['firewall']} [{registro['gateway']}]: {registro['num_usuarios']} usuarios")
+                        logging.info(f"✅ {registro['firewall']} [{registro['gateway']}]: {registro['num_usuarios']} usuarios")
                         conteo_registros += 1
                     elif registro['status'] == "disconnected":
-                        print(f"  ❌ {registro['firewall']} [{registro['gateway']}] desconectado")
+                        logging.info(f"❌ {registro['firewall']} [{registro['gateway']}] desconectado")
                         conteo_registros += 1
             except Exception as e:
-                print(f"Error en {firewall['name']}: {e}")
-    print(f"{conteo_registros} registros guardados en la BD")
+                logging.error(f"Error en {firewall['name']}: {e}")
+    logging.info(f"{conteo_registros} registros guardados en la BD")
 
 
 def main():
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s [%(levelname)s] %(message)s',
+        handlers=[
+            logging.FileHandler('gp_monitor.log'),
+            logging.StreamHandler()
+        ]
+    )
+
     intervalo = 5
-    print("======= GlobalProtect Monitor Iniciado =======")
-    print(f"==== Intervalo de recoleccion: {intervalo} minutos ====")
-    print("Presiona Ctrl+C para detener....\n")
+    logging.info("======= GlobalProtect Monitor Iniciado =======")
+    logging.info(f"==== Intervalo de recoleccion: {intervalo} minutos ====")
+    logging.info("Presiona Ctrl+C para detener....\n")
     archivo = Path('config.yaml')
 
     if archivo.exists():
-        print("✔️ Archivo config.yaml encontrado\n")
+        logging.info("✔️ Archivo config.yaml encontrado\n")
         ciclos = 0
 
         while True:
@@ -52,11 +62,11 @@ def main():
             ejecutar_ciclo(ciclos)
             time.sleep(intervalo * 60)
     else:
-        print("No se encontro el archivo config.yaml")
+        logging.error("No se encontro el archivo config.yaml")
         return
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n=== Monitor Detenido ===")
+        logging.info("\n=== Monitor Detenido ===")
