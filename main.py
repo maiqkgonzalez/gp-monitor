@@ -7,14 +7,18 @@ from pathlib import Path
 import logging
 
 def ejecutar_ciclo(ciclos):
-    #Bloque para el tiempo y ciclos
-    #tiempo_actual = datetime.now().strftime('%H:%M:%S')
+    '''
+    Ejecuta cada ciclo completo. Lee el archivo config.yaml, consulta cada firewall con el API, procesa los datos y los inserta en la BD.
+
+    Parameters:
+    ciclos (int): Contador de cada vez que se ejecuta un ciclo.
+    '''
+
     logging.info(f"Ciclo {ciclos}")
 
-    #Obtener la lista con los diccionarios de firewalls
+    #Obtener la lista con los diccionarios de firewalls del archivo config.yaml
     firewalls = obtener_firewalls()
-    conteo_registros = 0
-
+    
     #Loop para iterar la lista
     for firewall in firewalls:
             try:
@@ -28,16 +32,19 @@ def ejecutar_ciclo(ciclos):
                 for registro in registros:
                     if registro['status'] == "connected":
                         logging.info(f"✅ {registro['firewall']} [{registro['gateway']}]: {registro['num_usuarios']} usuarios")
-                        conteo_registros += 1
+                        ciclos += 1
                     elif registro['status'] == "disconnected":
                         logging.info(f"❌ {registro['firewall']} [{registro['gateway']}] desconectado")
-                        conteo_registros += 1
+                        ciclos += 1
             except Exception as e:
                 logging.error(f"Error en {firewall['name']}: {e}")
-    logging.info(f"{conteo_registros} registros guardados en la BD")
+    logging.info(f"{ciclos} registros guardados en la BD")
 
 
 def main():
+    '''Funcion pricipal que mantiene el script ejecutandose'''
+
+    #Setup del loggin
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s [%(levelname)s] %(message)s',
@@ -48,9 +55,13 @@ def main():
     )
 
     intervalo = 5
+
+    #Logs de arranque
     logging.info("======= GlobalProtect Monitor Iniciado =======")
     logging.info(f"==== Intervalo de recoleccion: {intervalo} minutos ====")
     logging.info("Presiona Ctrl+C para detener....\n")
+    
+    #Bloque que valida que exista el config.yaml
     archivo = Path('config.yaml')
 
     if archivo.exists():

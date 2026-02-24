@@ -2,6 +2,7 @@ import sqlite3
 import logging
 
 def crear_tabla():
+    '''Crea tabla registros'''
     with sqlite3.connect("usuarios_gp.db") as connection:
         cursor = connection.cursor()
         
@@ -20,6 +21,9 @@ def crear_tabla():
         connection.commit()
 
 def insertar_registro(firewall, gateway, num_usuarios, timestamp, status):
+    '''
+    Inserta el registro de cada firewall en la BD.
+    '''
     try:
         with sqlite3.connect("usuarios_gp.db") as connection:
             cursor = connection.cursor()
@@ -38,6 +42,7 @@ def insertar_registro(firewall, gateway, num_usuarios, timestamp, status):
         return False
 
 def insertar_registros_batch(lista_registros):
+    '''Inserta todos los registros de la lista de firewalls a la BD'''
     for registro in lista_registros:
         firewall = registro['firewall']
         gateway = registro['gateway']
@@ -51,8 +56,3 @@ def insertar_registros_batch(lista_registros):
 if __name__ == "__main__":
     crear_tabla()
     print("Base de datos creada")
-
-    #lista_prueba = [{'firewall': 'firewall_mty', 'gateway': 'Campus_GP_Gateway', 'num_usuarios': 0, 'timestamp': '2026-02-17 17:26:14'}, {'firewall': 'firewall_mty', 'gateway': 'Neoris_GP_Gateway', 'num_usuarios': 74, 'timestamp': '2026-02-17 17:26:14'}]
-
-    #insertar_registros_batch(lista_prueba)
-    

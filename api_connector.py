@@ -8,8 +8,9 @@ import logging
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def obtener_usuarios(host, api_key, gateway=None) -> Optional[str]:
+    '''Por medio del API obtiene la lista completa de usuarios. (ejecuta el comando show global protect current user)'''
     try:
-        URL = f"https://{host}/api/" # URL basica para entrar al API del firewall
+        url = f"https://{host}/api/" # URL basica para entrar al API del firewall
 
         #Parametros
         parametros =  {
@@ -25,7 +26,7 @@ def obtener_usuarios(host, api_key, gateway=None) -> Optional[str]:
             #Si no existe gateway aplicara el comando general
             parametros['cmd'] = '<show><global-protect-gateway><current-user></current-user></global-protect-gateway></show>'
 
-        response = requests.get(URL, params=parametros,verify=False,timeout=5)
+        response = requests.get(url, params=parametros,verify=False,timeout=5)
         response.raise_for_status() #Excepcion para bad status codes (4XX-5XX)
         return response.text # Regresa la respuesta en texto 'crudo'
     
@@ -40,5 +41,3 @@ def obtener_usuarios(host, api_key, gateway=None) -> Optional[str]:
     except Exception as e:
         logging.error(f"Error inesperado en {host}: {e}")
         return None
-
-#if __name__ == "__main__":
