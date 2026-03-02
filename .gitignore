@@ -1,5 +1,6 @@
 config.yaml
 usuarios_gp.db
+users_gp.db
 gp_monitor.log
 .venv/
 __pycache__/

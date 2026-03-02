@@ -1,50 +1,33 @@
 import time
-from config_reader import obtener_firewalls
-from data_processor import procesar_firewall
-from database import insertar_registros_batch
-from datetime import datetime
+from config_reader import get_firewalls
+from data_processor import process_firewall_data
+from database import insert_batch_records
 from pathlib import Path
 import logging
 
-def ejecutar_ciclo(ciclos):
-    '''
-    Ejecuta cada ciclo completo. Lee el archivo config.yaml, consulta cada firewall con el API, procesa los datos y los inserta en la BD.
-
-    Parameters:
-    ciclos (int): Contador de cada vez que se ejecuta un ciclo.
-    '''
-
-    logging.info(f"Ciclo {ciclos}")
-
-    #Obtener la lista con los diccionarios de firewalls del archivo config.yaml
-    firewalls = obtener_firewalls()
+def run_monitor_cycle(cycle_count: int):
+    """
+    Executes a complete monitoring cycle: reads config, queries APIs, processes data, and inserts into DB.
+    """
+    logging.info(f"Cycle {cycle_count}")
+    firewalls = get_firewalls()
     
-    #Loop para iterar la lista
     for firewall in firewalls:
-            try:
-                #Procesar cada firewall para obtener los registros
-                registros = procesar_firewall(firewall) 
-            
-                #Insertar en la base de datos
-                insertar_registros_batch(registros)
+        try:
+            records = process_firewall_data(firewall) 
+            insert_batch_records(records)
 
-                #Imprimir resumen
-                for registro in registros:
-                    if registro['status'] == "connected":
-                        logging.info(f"✅ {registro['firewall']} [{registro['gateway']}]: {registro['num_usuarios']} usuarios")
-                        ciclos += 1
-                    elif registro['status'] == "disconnected":
-                        logging.info(f"❌ {registro['firewall']} [{registro['gateway']}] desconectado")
-                        ciclos += 1
-            except Exception as e:
-                logging.error(f"Error en {firewall['name']}: {e}")
-    logging.info(f"{ciclos} registros guardados en la BD")
-
+            for record in records:
+                if record['status'] == "connected":
+                    logging.info(f"✅ {record['firewall']} [{record['gateway']}]: {record['users']} users")
+                elif record['status'] == "disconnected":
+                    logging.info(f"❌ {record['firewall']} [{record['gateway']}] disconnected")
+                    
+        except Exception as e:
+            logging.error(f"Error processing {firewall['name']}: {e}")
 
 def main():
-    '''Funcion pricipal que mantiene el script ejecutandose'''
-
-    #Setup del loggin
+    """Main function that keeps the script running."""
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s [%(levelname)s] %(message)s',
@@ -54,30 +37,27 @@ def main():
         ]
     )
 
-    intervalo = 5
+    interval_minutes = 5
 
-    #Logs de arranque
-    logging.info("======= GlobalProtect Monitor Iniciado =======")
-    logging.info(f"==== Intervalo de recoleccion: {intervalo} minutos ====")
-    logging.info("Presiona Ctrl+C para detener....\n")
+    logging.info("======= GlobalProtect Monitor Started =======")
+    logging.info(f"==== Collection interval: {interval_minutes} minutes ====")
+    logging.info("Press Ctrl+C to stop....\n")
     
-    #Bloque que valida que exista el config.yaml
-    archivo = Path('config.yaml')
+    config_file = Path('config.yaml')
 
-    if archivo.exists():
-        logging.info("✔️ Archivo config.yaml encontrado\n")
-        ciclos = 0
+    if config_file.exists():
+        logging.info("✔️ config.yaml found\n")
+        cycle_count = 0
 
         while True:
-            ciclos += 1
-            ejecutar_ciclo(ciclos)
-            time.sleep(intervalo * 60)
+            cycle_count += 1
+            run_monitor_cycle(cycle_count)
+            time.sleep(interval_minutes * 60)
     else:
-        logging.error("No se encontro el archivo config.yaml")
-        return
+        logging.error("config.yaml file not found. Exiting.")
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        logging.info("\n=== Monitor Detenido ===")
+        logging.info("\n=== Monitor Stopped ===")

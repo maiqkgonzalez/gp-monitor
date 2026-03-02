@@ -1,43 +1,38 @@
 import requests
 import urllib3
-from config_reader import obtener_firewalls
 from typing import Optional
 import logging
 
-#Deshabilitar warnings de SSL
+# Disable SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-def obtener_usuarios(host, api_key, gateway=None) -> Optional[str]:
-    '''Por medio del API obtiene la lista completa de usuarios. (ejecuta el comando show global protect current user)'''
+def get_connected_users(host: str, api_key: str, gateway: Optional[str] = None) -> Optional[str]:
+    """
+    Fetches the complete list of users via API (executes 'show global protect current user').
+    """
     try:
-        url = f"https://{host}/api/" # URL basica para entrar al API del firewall
+        url = f"https://{host}/api/" 
+        
+        params = {
+            'type': 'op',
+            'key': api_key
+        }
 
-        #Parametros
-        parametros =  {
-        'type': 'op',
-        'key': api_key
-         }
-
-        #If para identificar si hay gateway.
         if gateway:
-            #Si existe gateway aplicara el comando especificando el gateway
-            parametros['cmd'] = f'<show><global-protect-gateway><current-user><gateway>{gateway}</gateway></current-user></global-protect-gateway></show>'
+            params['cmd'] = f'<show><global-protect-gateway><current-user><gateway>{gateway}</gateway></current-user></global-protect-gateway></show>'
         else:
-            #Si no existe gateway aplicara el comando general
-            parametros['cmd'] = '<show><global-protect-gateway><current-user></current-user></global-protect-gateway></show>'
+            params['cmd'] = '<show><global-protect-gateway><current-user></current-user></global-protect-gateway></show>'
 
-        response = requests.get(url, params=parametros,verify=False,timeout=5)
-        response.raise_for_status() #Excepcion para bad status codes (4XX-5XX)
-        return response.text # Regresa la respuesta en texto 'crudo'
+        response = requests.get(url, params=params, verify=False, timeout=5)
+        response.raise_for_status() 
+        return response.text 
     
-    #Manejo de errores
     except requests.exceptions.HTTPError as e:
-        #Errores especificos de HTTP
-        logging.error(f"HTTP error en {host}: {e}")
+        logging.error(f"HTTP error on {host}: {e}")
         return None
     except requests.exceptions.RequestException as e:
-        logging.error(f"Error de conexion en {host}: {e}")
+        logging.error(f"Connection error on {host}: {e}")
         return None
     except Exception as e:
-        logging.error(f"Error inesperado en {host}: {e}")
+        logging.error(f"Unexpected error on {host}: {e}")
         return None

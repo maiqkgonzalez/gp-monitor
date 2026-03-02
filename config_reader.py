@@ -1,12 +1,11 @@
 import yaml
 
-def leer_config():
-    """Lee el archivo config.yaml y retorna el diccionario completo"""
+def read_config() -> dict:
+    """Reads the config.yaml file and returns the full dictionary."""
     with open('config.yaml', 'r') as file:
-        config_file = yaml.safe_load(file)
-        return config_file
+        return yaml.safe_load(file)
 
-def obtener_firewalls():
-    """Retorna la lista de diccionarios de firewalls del config.yaml"""
-    config = leer_config()  
+def get_firewalls() -> list:
+    """Returns the list of firewall dictionaries from config.yaml."""
+    config = read_config()  
     return config['firewalls']

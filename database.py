@@ -1,58 +1,44 @@
 import sqlite3
 import logging
 
-def crear_tabla():
-    '''Crea tabla registros'''
-    with sqlite3.connect("usuarios_gp.db") as connection:
-        cursor = connection.cursor()
-        
-        #Crear tabla
+def create_table():
+    """Creates the records table."""
+    with sqlite3.connect("users_gp.db") as conn:
+        cursor = conn.cursor()
         create_table_query = '''
-            CREATE TABLE IF NOT EXISTS registros (
+            CREATE TABLE IF NOT EXISTS records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT NOT NULL,
-            num_usuarios INTEGER,
+            users INTEGER,
             firewall TEXT NOT NULL,
             gateway TEXT,
             status TEXT NOT NULL
         );
         '''
         cursor.execute(create_table_query)
-        connection.commit()
+        conn.commit()
 
-def insertar_registro(firewall, gateway, num_usuarios, timestamp, status):
-    '''
-    Inserta el registro de cada firewall en la BD.
-    '''
+def insert_batch_records(records_list: list):
+    """Inserts all records from the firewall list into the DB using a single connection."""
     try:
-        with sqlite3.connect("usuarios_gp.db") as connection:
-            cursor = connection.cursor()
-
+        with sqlite3.connect("users_gp.db") as conn:
+            cursor = conn.cursor()
             insert_query = '''
-            INSERT INTO registros (firewall, gateway, num_usuarios, timestamp, status)
+            INSERT INTO records (firewall, gateway, users, timestamp, status)
             VALUES (?, ?, ?, ?, ?);
             '''
-            insert_values = (firewall, gateway, num_usuarios, timestamp, status)
-
-            cursor.execute(insert_query, insert_values)
-            connection.commit()
-        return True
+            
+            # Prepare a list of tuples for executemany
+            values = [
+                (r['firewall'], r['gateway'], r['users'], r['timestamp'], r['status']) 
+                for r in records_list
+            ]
+            
+            cursor.executemany(insert_query, values)
+            conn.commit()
     except sqlite3.Error as e:
-        logging.error(f"Error {e}")
-        return False
-
-def insertar_registros_batch(lista_registros):
-    '''Inserta todos los registros de la lista de firewalls a la BD'''
-    for registro in lista_registros:
-        firewall = registro['firewall']
-        gateway = registro['gateway']
-        num_usuarios = registro['num_usuarios']
-        timestamp = registro['timestamp']
-        status = registro['status']
-
-        insertar_registro(firewall, gateway, num_usuarios, timestamp, status)
-
+        logging.error(f"Database error: {e}")
 
 if __name__ == "__main__":
-    crear_tabla()
-    print("Base de datos creada")
+    create_table()
+    print("DB created")
