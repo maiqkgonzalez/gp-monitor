@@ -2,15 +2,14 @@ import time
 from config_reader import get_firewalls
 from data_processor import process_firewall_data
 from database import insert_batch_records
-from pathlib import Path
 import logging
 
-def run_monitor_cycle(cycle_count: int):
+def run_monitor_cycle(cycle_count: int, list_firewalls: list):
     """
-    Executes a complete monitoring cycle: reads config, queries APIs, processes data, and inserts into DB.
+    Executes a complete monitoring cycle: queries APIs, processes data, and inserts into DB.
     """
     logging.info(f"Cycle {cycle_count}")
-    firewalls = get_firewalls()
+    firewalls = list_firewalls
     
     for firewall in firewalls:
         try:
@@ -41,23 +40,19 @@ def main():
 
     logging.info("======= GlobalProtect Monitor Started =======")
     logging.info(f"==== Collection interval: {interval_minutes} minutes ====")
-    logging.info("Press Ctrl+C to stop....\n")
-    
-    config_file = Path('config.yaml')
+    logging.info("Press Ctrl+C to stop....")
 
-    if config_file.exists():
-        logging.info("✔️ config.yaml found\n")
-        cycle_count = 0
+    firewalls = get_firewalls()
+    cycle_count = 0
 
+    try:
         while True:
             cycle_count += 1
-            run_monitor_cycle(cycle_count)
+            run_monitor_cycle(cycle_count, firewalls)
             time.sleep(interval_minutes * 60)
-    else:
-        logging.error("config.yaml file not found. Exiting.")
+    except KeyboardInterrupt:
+        logging.info("=== Monitor Stopped ===")
+    
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        logging.info("\n=== Monitor Stopped ===")
+    main() 
