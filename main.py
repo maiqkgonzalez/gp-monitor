@@ -1,5 +1,5 @@
 import time
-from config_reader import get_firewalls
+from config_reader import get_firewalls, get_interval, read_config
 from data_processor import process_firewall_data
 from database import insert_batch_records
 import logging
@@ -35,14 +35,14 @@ def main():
             logging.StreamHandler()
         ]
     )
-
-    interval_minutes = 5
+    config = read_config()
+    interval_minutes = get_interval(config)
 
     logging.info("======= GlobalProtect Monitor Started =======")
     logging.info(f"==== Collection interval: {interval_minutes} minutes ====")
     logging.info("Press Ctrl+C to stop....")
 
-    firewalls = get_firewalls()
+    firewalls = get_firewalls(config)
     cycle_count = 0
 
     try:

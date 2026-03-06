@@ -15,9 +15,9 @@ def read_config() -> dict:
         logging.error(f"Error parsing YAML: {e}")
         raise
 
-def get_firewalls() -> List[dict]:
+def get_firewalls(config: dict) -> List[dict]:
     """Returns the list of firewall dictionaries from config.yaml."""
-    firewalls_config = read_config()  
+    firewalls_config = config 
     
     if firewalls_config is None:
         raise ValueError("Config file is empty")
@@ -36,4 +36,19 @@ def get_firewalls() -> List[dict]:
         logging.error(f"Unexpected error: {e}")
         raise
 
+def get_interval(config: dict) -> int:
+    """Return the interval time for each monitor cycle. If was not found on config.yaml returns 5 by default"""
+    interval_config = config.get('interval', 5)
     
+    try:
+        interval = int(interval_config)
+
+        if interval <= 0:
+            logging.warning("Invalid interval value. Seted to 5 minutes by default")
+            return 5
+        
+        return interval
+
+    except (ValueError, TypeError):
+        logging.warning("Invalid interval value. Seted to 5 minutes by default")
+        return 5
