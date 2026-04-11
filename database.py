@@ -20,6 +20,19 @@ def create_table():
         conn.commit()
 
 
+def create_index():
+    """Create an INDEX with columns firewall and timestamp"""
+    with sqlite3.connect("users_gp.db") as conn:
+        cursor = conn.cursor()
+        create_index_query = """
+        CREATE INDEX IF NOT EXISTS index_firewall
+        ON records (firewall, timestamp);
+        """
+
+        cursor.execute(create_index_query)
+        conn.commit()
+
+
 def insert_batch_records(records_list: list):
     """Inserts all records from the firewall list into the DB using a single connection."""
     try:
@@ -44,4 +57,4 @@ def insert_batch_records(records_list: list):
 
 if __name__ == "__main__":
     create_table()
-    print("DB created")
+    create_index()

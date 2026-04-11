@@ -18,7 +18,7 @@ def read_config() -> dict:
 
 
 def get_firewalls(config: dict) -> List[dict]:
-    """Returns the list of firewall dictionaries from config.yaml."""
+    """Returns the list with dictionary of firewall dictionaries from config.yaml."""
     firewalls_config = config
 
     if firewalls_config is None:
