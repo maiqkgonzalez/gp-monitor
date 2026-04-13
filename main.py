@@ -3,6 +3,7 @@ from config_reader import get_firewalls, get_interval, read_config
 from data_processor import process_firewall_data
 from database import insert_batch_records
 import logging
+from logging.handlers import RotatingFileHandler
 
 
 def run_monitor_cycle(cycle_count: int, list_firewalls: list):
@@ -36,7 +37,10 @@ def main():
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(message)s",
-        handlers=[logging.FileHandler("gp_monitor.log"), logging.StreamHandler()],
+        handlers=[
+            RotatingFileHandler("gp_monitor.log", maxBytes=2097152, backupCount=5),
+            logging.StreamHandler(),
+        ],
     )
     config = read_config()
     interval_minutes = get_interval(config)
