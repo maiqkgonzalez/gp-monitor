@@ -21,12 +21,10 @@ def get_db_connection():
         conn.close()
 
 
-def get_max_users_per_firewall(
-    firewall_list: list, start_date: str, end_date: str
-) -> list:
+def get_max_users_per_firewall(firewall_list: list) -> list:
     """
-    Returns a list of tuples with each firewall and its maximum number of
-    connected users within the given date range.
+    Returns a list of tuples with each firewall and its all-time maximum
+    number of connected users across all records in the database.
 
     Example: [('firewall_1', 100), ('firewall_2', 77)]
     """
@@ -41,12 +39,10 @@ def get_max_users_per_firewall(
         FROM records
         WHERE firewall IN ({placeholders})
         AND status = ?
-        AND timestamp BETWEEN ? AND ?
         GROUP BY firewall;
         """
 
-        # Concatenete lists to pass a single list to 'execute'
-        query_values = firewall_list + ["connected", start_date, end_date]
+        query_values = firewall_list + ["connected"]
 
         cursor.execute(query, query_values)
 
@@ -88,8 +84,6 @@ if __name__ == "__main__":
     print(
         get_max_users_per_firewall(
             firewall_list=["firewall_esp", "firewall_arg", "firewall_peru"],
-            start_date="2026-03-24 11:56:49",
-            end_date="2026-03-25 16:06:19",
         )
     )
     print(" ")

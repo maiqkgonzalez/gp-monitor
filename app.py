@@ -85,9 +85,7 @@ st.line_chart(data=dataframe_pivot)
 st.subheader("Max Users")
 
 # Fetch max users per firewall from DB
-max_users_data = get_max_users_per_firewall(
-    selected_firewall, start_date_str, end_date_str
-)
+max_users_data = get_max_users_per_firewall(selected_firewall)
 
 # Convert to DataFrame and render table
 dataframe_max = pd.DataFrame(max_users_data, columns=["Firewall", "Max Users"])
