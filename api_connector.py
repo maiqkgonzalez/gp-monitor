@@ -35,8 +35,8 @@ def get_connected_users(
         logging.error(f"HTTP error on {host}: {e.response.status_code} {e.response.reason}")
         return None
     except requests.exceptions.RequestException as e:
-        logging.error(f"Connection error on {host}: {e}")
+        logging.error(f"Connection error on {host}: {type(e).__name__}")
         return None
     except Exception as e:
-        logging.error(f"Unexpected error on {host}: {e}")
+        logging.error(f"Unexpected error on {host}: {type(e).__name__}")
         return None
