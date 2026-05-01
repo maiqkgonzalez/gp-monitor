@@ -32,7 +32,7 @@ def get_connected_users(
         return response.text
 
     except requests.exceptions.HTTPError as e:
-        logging.error(f"HTTP error on {host}: {e}")
+        logging.error(f"HTTP error on {host}: {e.response.status_code} {e.response.reason}")
         return None
     except requests.exceptions.RequestException as e:
         logging.error(f"Connection error on {host}: {e}")
