@@ -1,0 +1,19 @@
+firewalls:
+  - name: fw-example-01          # Friendly name (used in the dashboard)
+    host: 192.168.1.1            # Firewall IP or hostname
+    api_key: YOUR_API_KEY_HERE   # GlobalProtect API key
+    # gateway:                   # Omit or set null to monitor all gateways
+
+  - name: fw-example-02
+    host: 10.0.0.1
+    api_key: YOUR_API_KEY_HERE
+    gateway: "Branch-GW"         # Monitor a single gateway
+
+  - name: fw-example-03
+    host: 10.10.0.1
+    api_key: YOUR_API_KEY_HERE
+    gateway:                     # Monitor multiple specific gateways
+      - "HQ-GW-North"
+      - "HQ-GW-South"
+
+interval: "10"                   # Polling interval in minutes
