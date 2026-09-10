@@ -105,6 +105,44 @@ and fails fast with `ValueError` if a variable is missing.
 curl -k -X GET "https://<firewall-ip>/api/?type=keygen&user=<admin-user>&password=<password>"
 ```
 
+## API Account Configuration Recommendations
+
+### 1. RBAC
+
+Configure a custom role with only:
+
+* **XML API → Operational Requests**
+
+**Note:** This does not strictly follow the principle of least privilege. The `Operational Requests` permission is not granular enough to allow only the specific GlobalProtect commands required by the tool.
+
+If the API key is compromised, the account may potentially be used to:
+
+* Restart or shut down the device, affecting availability.
+* Run other operational commands.
+* Obtain operational information about the device, such as interfaces, VPNs, routing, and system information.
+
+PAN-OS does not provide enough granularity to restrict operational commands to only the specific GlobalProtect commands required by the tool.
+
+For this reason, the risk of the `Operational Requests` permission should be considered before using this configuration in production.
+
+### 2. Use a Dedicated Account
+
+Create a dedicated API account for this tool.
+
+The account should be used **only for this purpose** and should not be shared with other applications, scripts, or users.
+
+### 3. Restrict the Source IP
+
+Restrict API access to the IP address where the gp-monitor tool is running.
+
+This can be done using:
+
+* Security policies, when the API is accessed through the management interface or a reachable interface.
+* A management profile, when applicable to the PAN-OS management configuration.
+
+
+This provides an additional security layer if the API key is compromised.
+
 ---
 
 ## Usage
