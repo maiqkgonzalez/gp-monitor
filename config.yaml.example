@@ -1,17 +1,17 @@
 firewalls:
-  - name: fw-example-01          # Friendly name (used in the dashboard)
+  - name: fw-datacenter-01       # Friendly name (used in the dashboard)
     host: 192.168.1.1            # Firewall IP or hostname
-    api_key: YOUR_API_KEY_HERE   # GlobalProtect API key
+    api_key_env: FW_DATACENTER_01_API_KEY  # Name of the env var in .env holding the API key
     # gateway:                   # Omit or set null to monitor all gateways
 
-  - name: fw-example-02
+  - name: fw-branch-01
     host: 10.0.0.1
-    api_key: YOUR_API_KEY_HERE
+    api_key_env: FW_BRANCH_01_API_KEY
     gateway: "Branch-GW"         # Monitor a single gateway
 
-  - name: fw-example-03
+  - name: fw-hq-01
     host: 10.10.0.1
-    api_key: YOUR_API_KEY_HERE
+    api_key_env: FW_HQ_01_API_KEY
     gateway:                     # Monitor multiple specific gateways
       - "HQ-GW-North"
       - "HQ-GW-South"

@@ -1,10 +1,7 @@
 config.yaml
-usuarios_gp.db
+.env
 users_gp.db
 gp_monitor.log*
 .venv/
 __pycache__/
 *.pyc
-.venv
-.env
-CLAUDE.md

@@ -20,7 +20,7 @@ A lightweight monitoring tool for **Palo Alto Networks GlobalProtect** firewalls
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.14 (pinned via `.python-version`, Linux)
 - Network access to your GlobalProtect firewall management API
 - A valid GlobalProtect API key for each firewall
 
@@ -33,16 +33,18 @@ A lightweight monitoring tool for **Palo Alto Networks GlobalProtect** firewalls
 git clone https://github.com/maiqkgonzalez/gp-monitor.git
 cd gp-monitor
 
-# 2. Create and activate a virtual environment
+# 2. Create and activate a virtual environment (Linux)
 python3 -m venv .venv
-source .venv/bin/activate        # Linux / macOS
-# .venv\Scripts\activate         # Windows
+source .venv/bin/activate
 
 # 3. Install dependencies
+pip install --upgrade pip
 pip install -r requirements.txt
 
-# 4. Create your configuration file (see Configuration section below)
-cp config.yaml.example config.yaml   # edit with your firewall details
+# 4. Create your configuration files (see Configuration section below)
+cp config.yaml.example config.yaml   # edit with your firewall details (no secrets)
+cp .env.example .env                 # fill in real API keys
+chmod 600 config.yaml .env users_gp.db
 
 # 5. Initialize the database
 python3 database.py
@@ -52,28 +54,42 @@ python3 database.py
 
 ## Configuration
 
-Create a `config.yaml` file in the project root. **This file is gitignored — never commit API keys.**
+Hybrid setup: `config.yaml` holds non-sensitive data, `.env` holds secrets.
+Both files are gitignored — never commit API keys.
+
+`config.yaml`:
 
 ```yaml
 firewalls:
   - name: fw-datacenter-01       # Friendly name (used in the dashboard)
     host: 192.168.1.1            # Firewall IP or hostname
-    api_key: YOUR_API_KEY_HERE   # GlobalProtect API key
+    api_key_env: FW_DATACENTER_01_API_KEY  # Name of the env var in .env
 
   - name: fw-branch-01
     host: 10.0.0.1
-    api_key: YOUR_API_KEY_HERE
+    api_key_env: FW_BRANCH_01_API_KEY
     gateway: "Branch-GW"         # Optional: monitor a single gateway
 
   - name: fw-hq-01
     host: 10.10.0.1
-    api_key: YOUR_API_KEY_HERE
+    api_key_env: FW_HQ_01_API_KEY
     gateway:                     # Optional: monitor multiple specific gateways
       - "HQ-GW-North"
       - "HQ-GW-South"
 
 interval: "10"                   # Polling interval in minutes
 ```
+
+`.env`:
+
+```dotenv
+FW_DATACENTER_01_API_KEY=your_real_key_here
+FW_BRANCH_01_API_KEY=your_real_key_here
+FW_HQ_01_API_KEY=your_real_key_here
+```
+
+`config_reader.py` resolves `api_key_env` via `python-dotenv` at startup
+and fails fast with `ValueError` if a variable is missing.
 
 **`gateway` field behaviour:**
 
@@ -112,7 +128,8 @@ After=network.target
 Type=simple
 User=YOUR_LINUX_USER
 WorkingDirectory=/path/to/gp-monitor
-ExecStart=/path/to/gp-monitor/.venv/bin/python3 main.py
+EnvironmentFile=/path/to/gp-monitor/.env
+ExecStart=/path/to/gp-monitor/.venv/bin/python main.py
 Restart=on-failure
 RestartSec=30
 
@@ -159,12 +176,17 @@ The dashboard opens automatically in your browser at `http://localhost:8501`.
 gp-monitor/
 ├── main.py              # Entry point — monitoring loop
 ├── app.py               # Streamlit dashboard
-├── config_reader.py     # Parses config.yaml
+├── config_reader.py     # Parses config.yaml + resolves secrets from .env
 ├── api_connector.py     # HTTPS requests to firewall API
 ├── data_processor.py    # XML parsing and record building
 ├── database.py          # SQLite writes (INSERT)
 ├── db_reader.py         # SQLite reads (SELECT) for the dashboard
-├── config.yaml          # Your configuration (gitignored)
+├── config.yaml          # Non-sensitive config, references secrets (gitignored)
+├── config.yaml.example  # Template without secrets (committed)
+├── .env                 # Real API keys (gitignored, chmod 600)
+├── .env.example         # Template without secrets (committed)
+├── gp-monitor.service.example  # systemd unit template (Linux)
+├── .python-version      # Pinned Python version for venv
 ├── users_gp.db          # SQLite database (gitignored)
 ├── gp_monitor.log       # Rotating log file (gitignored)
 └── requirements.txt
@@ -174,8 +196,8 @@ gp-monitor/
 
 ```
 main.py
-  └── config_reader.py   → reads config.yaml (firewall list, interval)
-  └── api_connector.py   → HTTPS GET to each firewall, returns raw XML
+  └── config_reader.py   → reads config.yaml + resolves api_key_env from .env
+  └── api_connector.py   → HTTPS GET to each firewall, returns raw XML (never logs keys)
   └── data_processor.py  → counts <entry> tags per gateway in the XML
   └── database.py        → INSERT (timestamp, users, firewall, gateway, status)
 
@@ -201,19 +223,20 @@ app.py (Streamlit)
 
 | Component | Technology |
 |-----------|-----------|
-| Language | Python 3.9+ |
+| Language | Python 3.14 (Linux, see `.python-version`) |
 | Dashboard | [Streamlit](https://streamlit.io/) |
 | Charts | [Altair](https://altair-viz.github.io/) |
 | Data | Pandas, SQLite |
 | HTTP | Requests |
-| Config | PyYAML |
+| Config | PyYAML + python-dotenv |
 
 ---
 
 ## Security Notes
 
 - SSL verification is **disabled** (`verify=False`) to support firewalls with self-signed certificates. Do not expose the monitoring service to untrusted networks.
-- API keys are stored in plain text in `config.yaml`. Ensure proper file permissions (`chmod 600 config.yaml`) and never commit this file.
+- Secrets live in `.env`, not in `config.yaml`. `config.yaml` only holds `api_key_env` references. Set `chmod 600 .env config.yaml users_gp.db` and never commit `.env`/`config.yaml` (both gitignored).
+- API keys/URLs are never logged (`api_connector.py` deliberately avoids logging `params`/`url`).
 - This tool makes **read-only** API calls — it does not modify any firewall configuration.
 
 ---

@@ -17,6 +17,7 @@ def get_connected_users(
         url = f"https://{host}/api/"
 
         params = {"type": "op", "key": api_key}
+        # SECURITY: never log `params` or `response.url` — they contain the API key.
 
         if gateway:
             params["cmd"] = (

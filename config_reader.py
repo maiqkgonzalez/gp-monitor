@@ -1,6 +1,8 @@
+import os
 import yaml
 import logging
 from typing import List
+from dotenv import load_dotenv
 
 
 def read_config() -> dict:
@@ -18,7 +20,13 @@ def read_config() -> dict:
 
 
 def get_firewalls(config: dict) -> List[dict]:
-    """Returns the list with dictionary of firewall dictionaries from config.yaml."""
+    """Returns the list of firewall dicts with api_key resolved from .env.
+
+    config.yaml must define `api_key_env` (env var name) per firewall.
+    Secrets are never stored in YAML, only referenced. Values are loaded
+    from `.env` / process environment via python-dotenv.
+    """
+    
     firewalls_config = config
 
     if firewalls_config is None:
@@ -29,14 +37,37 @@ def get_firewalls(config: dict) -> List[dict]:
 
         if not isinstance(firewalls, list) or len(firewalls) == 0:
             raise ValueError("No firewalls defined in config")
-        return firewalls
-
     except KeyError:
         logging.error("The key 'firewalls' was not found in the YAML file..")
         raise
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
         raise
+
+    # Load secrets from .env (no-op if file is missing; systemd can
+    # provide them via EnvironmentFile instead).
+    load_dotenv()
+
+    for firewall in firewalls:
+        name = firewall.get("name", "<unnamed>")
+        env_var = firewall.get("api_key_env")
+
+        if not env_var:
+            raise ValueError(
+                f"Firewall '{name}' is missing required key 'api_key_env' in config.yaml"
+            )
+
+        api_key = os.getenv(env_var)
+        if not api_key:
+            raise ValueError(
+                f"Missing env var {env_var} for firewall '{name}'. "
+                f"Define it in .env (see .env.example)."
+            )
+
+        # Inject resolved secret in memory only; never write back to YAML.
+        firewall["api_key"] = api_key
+
+    return firewalls
 
 
 def get_interval(config: dict) -> int:
