@@ -33,6 +33,12 @@ def create_index():
         conn.commit()
 
 
+def init_db():
+    """Initializes the database (creates table and index if they don't exist)."""
+    create_table()
+    create_index()
+
+
 def insert_batch_records(records_list: list):
     """Inserts all records from the firewall list into the DB using a single connection."""
     try:
@@ -56,5 +62,4 @@ def insert_batch_records(records_list: list):
 
 
 if __name__ == "__main__":
-    create_table()
-    create_index()
+    init_db()

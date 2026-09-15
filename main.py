@@ -1,7 +1,7 @@
 import time
 from config_reader import get_firewalls, get_interval, read_config
 from data_processor import process_firewall_data
-from database import insert_batch_records
+from database import init_db, insert_batch_records
 import logging
 from logging.handlers import RotatingFileHandler
 
@@ -44,6 +44,9 @@ def main():
     )
     config = read_config()
     interval_minutes = get_interval(config)
+
+    init_db()
+    logging.info("Database initialized")
 
     logging.info("======= GlobalProtect Monitor Started =======")
     logging.info(f"==== Collection interval: {interval_minutes} minutes ====")

@@ -44,11 +44,10 @@ pip install -r requirements.txt
 # 4. Create your configuration files (see Configuration section below)
 cp config.yaml.example config.yaml   # edit with your firewall details (no secrets)
 cp .env.example .env                 # fill in real API keys
-chmod 600 config.yaml .env users_gp.db
-
-# 5. Initialize the database
-python3 database.py
+chmod 600 config.yaml .env
 ```
+
+> The SQLite database (`users_gp.db`) is created automatically on the first run of `main.py` — no manual setup needed.
 
 ---
 
@@ -217,7 +216,7 @@ gp-monitor/
 ├── config_reader.py     # Parses config.yaml + resolves secrets from .env
 ├── api_connector.py     # HTTPS requests to firewall API
 ├── data_processor.py    # XML parsing and record building
-├── database.py          # SQLite writes (INSERT)
+├── database.py          # SQLite init + writes (CREATE TABLE/INDEX IF NOT EXISTS + INSERT)
 ├── db_reader.py         # SQLite reads (SELECT) for the dashboard
 ├── config.yaml          # Non-sensitive config, references secrets (gitignored)
 ├── config.yaml.example  # Template without secrets (committed)
@@ -237,7 +236,7 @@ main.py
   └── config_reader.py   → reads config.yaml + resolves api_key_env from .env
   └── api_connector.py   → HTTPS GET to each firewall, returns raw XML (never logs keys)
   └── data_processor.py  → counts <entry> tags per gateway in the XML
-  └── database.py        → INSERT (timestamp, users, firewall, gateway, status)
+  └── database.py        → init (CREATE TABLE/INDEX IF NOT EXISTS) + INSERT (timestamp, users, firewall, gateway, status)
 
 app.py (Streamlit)
   └── db_reader.py       → SELECT with date/firewall/gateway filters
